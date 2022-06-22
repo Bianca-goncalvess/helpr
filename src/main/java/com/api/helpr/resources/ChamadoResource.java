@@ -8,6 +8,7 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,38 +23,52 @@ import com.api.helpr.domain.dtos.ChamadoDTO;
 import com.api.helpr.services.ChamadoService;
 
 @RestController
-@RequestMapping(value = "/service/chamados")
+@RequestMapping(value="/service/chamados")
 public class ChamadoResource {
-
+	
 	@Autowired
 	private ChamadoService service;
-
+	
 	@GetMapping(value = "/{id}")
-	public ResponseEntity<ChamadoDTO> findById(@PathVariable Integer id) {
+	public ResponseEntity<ChamadoDTO> findById(@PathVariable Integer id){
 		Chamado obj = service.findById(id);
 		return ResponseEntity.ok().body(new ChamadoDTO(obj));
 	}
-
+	
 	@GetMapping
-	public ResponseEntity<List<ChamadoDTO>> findAllChamados() {
+	public ResponseEntity<List<ChamadoDTO>> findAll(){
 		List<Chamado> list = service.findAll();
 		List<ChamadoDTO> listDto = list.stream().map(obj -> new ChamadoDTO(obj)).collect(Collectors.toList());
 		return ResponseEntity.ok().body(listDto);
 	}
 	
+	@GetMapping(value="/relatorios/{tecnico}")
+	public ResponseEntity<List<ChamadoDTO>> findReportChamadoTecnico(@PathVariable Integer tecnico){
+		List<Chamado> reportList = service.reportChamadoTecnico(tecnico);
+		List<ChamadoDTO> listDto = reportList.stream().map(rel ->new ChamadoDTO(rel)).collect(Collectors.toList());
+		return ResponseEntity.ok().body(listDto);
+	}
+	
+	@GetMapping(value="/relatorios/clientes/{cliente}")
+	public ResponseEntity<List<ChamadoDTO>> findReportChamadoCliente(@PathVariable Integer cliente){
+		List<Chamado> reportList = service.reportChamadoCliente(cliente);
+		List<ChamadoDTO> listDto = reportList.stream().map(rel ->new ChamadoDTO(rel)).collect(Collectors.toList());
+		return ResponseEntity.ok().body(listDto);
+	}
+
+		
+	@PreAuthorize("hasAnyRole('ROLE_TECNICO')")
 	@PostMapping
-	public ResponseEntity<ChamadoDTO> createChamado(@Valid @RequestBody ChamadoDTO objDto){
-		Chamado newObj = service.create(objDto);
-		URI uri = ServletUriComponentsBuilder.fromCurrentRequestUri()
-				.path("/{id}").buildAndExpand(newObj.getId()).toUri();
+	public ResponseEntity<ChamadoDTO> create(@Valid @RequestBody ChamadoDTO objDto){
+		Chamado obj = service.create(objDto);
+		URI uri = ServletUriComponentsBuilder.fromCurrentRequestUri().path("/{id}").buildAndExpand(obj.getId()).toUri();
 		return ResponseEntity.created(uri).build();
 	}
 	
+	@PreAuthorize("hasAnyRole('ROLE_TECNICO')")
 	@PutMapping(value = "/{id}")
-	public ResponseEntity<ChamadoDTO> update(
-			@PathVariable Integer id,@Valid @RequestBody ChamadoDTO objDto){
+	public ResponseEntity<ChamadoDTO> update(@PathVariable Integer id, @Valid @RequestBody ChamadoDTO objDto){
 		Chamado newObj = service.update(id, objDto);
 		return ResponseEntity.ok().body(new ChamadoDTO(newObj));
 	}
-
 }
