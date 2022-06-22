@@ -51,6 +51,15 @@ public class ChamadoService {
 		return repository.save(oldObj);
 	}
 	
+	public List<Chamado> reportChamadoTecnico(Integer tecnico) {
+		return repository.FindByTecnico(tecnico);
+	}
+	
+	public List<Chamado> reportChamadoCliente(Integer cliente) {
+		return repository.FindByCliente(cliente);
+	}
+
+	
 	public Chamado newChamado(ChamadoDTO obj) {
 		Tecnico tecnico = tecnicoService.findById(obj.getTecnico());
 		Cliente cliente = clienteService.findById(obj.getCliente());
@@ -73,7 +82,5 @@ public class ChamadoService {
 		chamado.setObservacoes(obj.getObservacoes());
 		return chamado;
 	}
-	
-	
-	
+
 }
